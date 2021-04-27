@@ -1,4 +1,3 @@
-const e = require('express');
 const mongo = require('mongodb');
 const auth = require("./auth.json")
 
@@ -12,7 +11,7 @@ function connect(cb)
     {
 
         console.log("Setting up MongoDB connection...");
-        client.connect(auth.mongodb.url,async  (err, dbs) => {
+        client.connect(auth.mongodb.url, {useNewUrlParser: true, useUnifiedTopology: true},async  (err, dbs) => {
             if(err)
             {
                 console.log("MongoDB connection failed");
@@ -49,6 +48,36 @@ function get(coll, id)
         })
     })
 }
+function gets(coll, query, params)
+{
+    if(!query) query = {};
+
+    return new Promise(function(resolve, reject) {
+        exports.db.collection(coll).find(query,params ? { projection : params } : undefined).toArray((err, result) => {
+            if(err)
+            {
+                resolve([]);
+            }else{
+                resolve(result);
+            }
+        })
+    })
+}
+
+function getsk(coll, query, params)
+{
+    return gets(coll, query, params).then(arr => {
+        return new Promise((resolve,reject) => {
+            var obj = {};
+
+            arr.forEach(e => {
+                obj[e.id] = e;
+            });
+
+            resolve(obj);
+        })
+    })
+}
 
 exports.connect = connect;
 
@@ -67,4 +96,26 @@ exports.member = async function(id)
 exports.cluster = async function(id)
 {
     return get("clusters", id);
+}
+
+exports.guildss = async function(query, params)
+{
+    return gets("guilds", query,params);
+}
+exports.userss = async function(query, params)
+{
+    return gets("users", query,params);
+}
+exports.memberss = async function(query, params)
+{
+    return gets("members", query,params);
+}
+exports.clusterss = async function(query, params)
+{
+    return gets("clusters", query,params);
+}
+
+exports.guildsk = async function(query, params)
+{
+    return getsk("guilds", query,params);
 }
