@@ -1,0 +1,16 @@
+{
+  "name": "merari",
+  "version": "1.0.0",
+  "description": "",
+  "main": "cluster.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "mongodb": "^3.6.6",
+    "yargs": "^16.2.0"
+  }
+}
