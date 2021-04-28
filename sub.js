@@ -7,6 +7,8 @@ exports.guilds = [];
 exports.channels = [];
 exports.modes = [];
 
+exports.id = "";
+
 exports.loadSub = async function()
 {
     var cid = cluster.clusterId;
@@ -34,10 +36,29 @@ exports.loadSub = async function()
     if(Array.isArray(doc.guilds)) { exports.guilds = doc.guilds; }
     if(Array.isArray(doc.channels)) { exports.channels = doc.channels; }
     if(Array.isArray(doc.modes)) { exports.modes = doc.modes; }
+    exports.id = doc.stampId;
 
     console.log(` SUB: Loaded cluster ${cid} doc; ${exports.guilds.length}G ${exports.channels.length}C`);
 
     return exports;
+}
+
+exports.poll = async function()
+{
+    await db.clusters.updateOne({id : cluster.clusterId},
+    {
+        $set : {
+            lastPoll : Date.now()
+        }
+    })
+
+    var lid = await db.cluster(cluster.clusterId);
+
+    if(exports.id != lid.stampId)
+    {
+        console.log(" SUB: Cluster structure has changed; pending load...");
+        await exports.loadSub();
+    }
 }
 
 /**

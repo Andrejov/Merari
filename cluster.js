@@ -6,7 +6,7 @@ const auth = require("./auth.json")
 const db = require("./db");
 const dbops = require("./dbops")
 const sub = require("./sub")
-const handler = require("./bot/handler")
+const handler = require("./bot/handler");
 
 const bot = new Discord.Client({ws : { intents: new Discord.Intents( [ Discord.Intents.NON_PRIVILEGED, "GUILD_MEMBERS"] ) }}  );;
 
@@ -19,6 +19,7 @@ const argv = yargs
     .argv;
 
 const clusterId = argv.cluster ? argv.cluster : 0;
+exports.activeClusters = 1;
 
 exports.bot = bot;
 exports.clusterId = clusterId;
@@ -30,7 +31,7 @@ async function main() {
         await db.connect();
     } catch (error) {
         console.error("Could not connect; terminating");
-        return;
+        process.exit(1);
     }
 
     bot.on('ready',async () => {
@@ -40,13 +41,35 @@ async function main() {
             url : 'https://www.twitch.tv/directory'
         })
 
-        await dbops.updateGuilds(bot);
+        await dbops.updateGuilds();
+
+        await dbops.updateMembers();
+
+        if(clusterId == 0)
+        {
+            console.log(" M: This is cluster 0; split pending...");
+            await dbops.verifyClusters();
+
+            setInterval(async () => {
+                if(await dbops.verifyClusters())
+                {
+                    await dbops.splitClusters(exports.activeClusters);
+                }
+            }, 10000);
+
+            await dbops.splitClusters(exports.activeClusters);
+        }
+        setInterval(() => {
+            sub.poll();
+        }, 5000);
 
         var subr = await sub.loadSub();
         if(!subr)
         {
-            return;
+            process.exit(1);
         }
+
+        handler.onReady();
 
         // db.clusters.updateOne({id : 0}, { $set : {
         //     guilds : [],
@@ -63,7 +86,6 @@ async function main() {
     bot.on('message', (msg) => {
         var handle = sub.handle(msg.guild,msg.channel);
 
-        console.log(handle);
         if(handle)
         {
             handler.onMessage(msg);

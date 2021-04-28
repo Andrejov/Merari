@@ -10,15 +10,15 @@ function connect(cb)
     return new Promise(function(resolve, reject)
     {
 
-        console.log("Setting up MongoDB connection...");
+        console.log(" DB: Setting up MongoDB connection...");
         client.connect(auth.mongodb.url, {useNewUrlParser: true, useUnifiedTopology: true},async  (err, dbs) => {
             if(err)
             {
-                console.log("MongoDB connection failed");
+                console.log(" DB: MongoDB connection failed");
                 
                 reject(err);
             }else{
-                console.log("MongoDB connection set up correctly")
+                console.log(" DB: MongoDB connection set up correctly")
                 exports.client = dbs;
 
                 var db = dbs.db("merari");
@@ -98,6 +98,10 @@ exports.cluster = async function(id)
     return get("clusters", id);
 }
 
+exports.member2 = function (guildId, memberId) {
+    return exports.member(`${guildId}-${memberId}`)
+}
+
 exports.guildss = async function(query, params)
 {
     return gets("guilds", query,params);
@@ -118,4 +122,9 @@ exports.clusterss = async function(query, params)
 exports.guildsk = async function(query, params)
 {
     return getsk("guilds", query,params);
+}
+
+exports.membersk = async function(query, params)
+{
+    return getsk("members", query,params);
 }
