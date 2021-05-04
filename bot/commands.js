@@ -2,6 +2,7 @@ const Discord = require("discord.js")
 const cluster = require("../cluster")
 const db = require("../db");
 const auth = require("../auth.json")
+const sub = require("../sub")
 
 const vargs = require("./vargs")
 const rich = require("./rich")
@@ -31,6 +32,7 @@ exports.arg = {
   * @property {ArgStruct} args
   * @property {function} execute
   * @property {string} permission
+  * @property {string} custom
   */
 
 exports.registerCommand = function(cmd, argstr, perms, func)
@@ -90,9 +92,9 @@ exports.hasPermission = async function(permname, member, gdoc, mdoc) {
             {
                 return true;
             }
-            // }else if(mdoc.permissions.indexOf("MERARI_ADMINISTRATOR") > -1){
-            //     return true;
-            // }
+            if(mdoc.permissions.indexOf("MERARI_ADMINISTRATOR") > -1){
+                return true;
+            }
         }
 
         return member.hasPermission("ADMINISTRATOR");
@@ -116,6 +118,12 @@ exports.handleMessage = async function(msg)
 
     var gdoc = await db.guild(msg.guild.id);
 
+    if(!gdoc)
+    {
+        console.log(` -- WARN -- CMD: GDoc for '${msg.guild.name}' returned empty`)
+        return;
+    }
+
     var prefix = gdoc.prefix ? gdoc.prefix : '$';
 
     var content = msg.content.trim();
@@ -126,10 +134,17 @@ exports.handleMessage = async function(msg)
 
         if(exports.commands[cmd])
         {
-            var mdoc = await db.member2(msg.guild.id, msg.member.id);
-
             var command = exports.commands[cmd];
 
+            if(command.custom)
+            {
+                if(sub.customs.indexOf(command.custom) == -1)
+                {
+                    return;
+                }
+            }
+
+            var mdoc = await db.member2(msg.guild.id, msg.member.id);
             var hasPerm = false;
 
             if(Array.isArray(command.permission))
@@ -151,11 +166,11 @@ exports.handleMessage = async function(msg)
         
             var err = 0;
 
-            try {
+            // try {
                 err = await command.execute(msg, v, gdoc, mdoc);
-            } catch (error) {
-                err = error;
-            }
+            // } catch (error) {
+            //     err = error;
+            // }
 
             if(err)
             {

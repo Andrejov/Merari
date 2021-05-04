@@ -41,6 +41,10 @@ async function main() {
             url : 'https://www.twitch.tv/directory'
         })
 
+        // await bot.user.setPresence({
+        //     status : 'invisible'
+        // })
+
         await dbops.updateGuilds();
 
         await dbops.updateMembers();

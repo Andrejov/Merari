@@ -26,10 +26,10 @@ exports.v = async function(msg, argstruct, permissions, doReply)
     // {
     if(!permissions)
     {
-        argstruct.forEach(async (at, index) => {
-        // for(index = 0; index < argstruct.length; index++)
-        // {
-        //     var at = argstruct[i];
+        // argstruct.forEach(async (at, index) => {
+        for(index = 0; index < argstruct.length; index++)
+        {
+            var at = argstruct[index];
             var optional = at.startsWith("u");
             var argVal = null;
     
@@ -72,20 +72,38 @@ exports.v = async function(msg, argstruct, permissions, doReply)
 
                         if(!found)
                         {
-                            members.forEach((m) => {
-                                if(m.user.id == next)
-                                {
-                                    found = m;
-                                    return;
-                                }
-                            })
+                            var f = null;
+                            try {
+                                f = await cluster.bot.users.fetch(next);
+                            } catch (error) {
+                                
+                            }
+
+                            if(f)
+                            {
+                                found = f;
+                            }
+                            // cluster.bot.users.cache.forEach((m) => {
+                            //     if(m.id == next)
+                            //     {
+                            //         found = m;
+                            //         return;
+                            //     }
+                            // })
+                            // members.forEach((m) => {
+                            //     if(m.user.id == next)
+                            //     {
+                            //         found = m;
+                            //         return;
+                            //     }
+                            // })
                         }
                         if(!found)
                         {
                             members.forEach((m) => {
                                 if(m.user.tag == next)
                                 {
-                                    found = m;
+                                    found = m.user;
                                     return;
                                 }
                             })
@@ -95,7 +113,7 @@ exports.v = async function(msg, argstruct, permissions, doReply)
                             members.forEach((m) => {
                                 if(m.user.username == next)
                                 {
-                                    found = m;
+                                    found = m.user;
                                     return;
                                 }
                             })
@@ -105,7 +123,7 @@ exports.v = async function(msg, argstruct, permissions, doReply)
                             members.forEach((m) => {
                                 if(m.nickname == next)
                                 {
-                                    found = m;
+                                    found = m.user;
                                     return;
                                 }
                             })
@@ -113,7 +131,7 @@ exports.v = async function(msg, argstruct, permissions, doReply)
                         
                         if(found)
                         {
-                            argVal = found.user;
+                            argVal = found;
                         }else{
                             valid = false;
                             invalid = index;
@@ -164,7 +182,7 @@ exports.v = async function(msg, argstruct, permissions, doReply)
             }
     
             vargs.push(argVal);
-        });
+        } //);
     }else{
         valid = false;
         hasPermission = false;
@@ -177,7 +195,7 @@ exports.v = async function(msg, argstruct, permissions, doReply)
         {
             if(!valid)
             {
-                var syntax = `Proper usage: &${doReply}`;
+                var syntax = `Proper usage: ${doReply}`;
                 argstruct.forEach((at,index) => {
                     var optional = at.startsWith("u");
                     if(optional) at = at.substr(1);

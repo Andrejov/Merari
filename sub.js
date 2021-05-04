@@ -7,6 +7,8 @@ exports.guilds = [];
 exports.channels = [];
 exports.modes = [];
 
+exports.customs = [];
+
 exports.id = "";
 
 exports.loadSub = async function()

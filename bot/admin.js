@@ -28,6 +28,11 @@ admin.clusters = async function(msg, vargs, gdoc, mdoc)
         `Current clusters saved in the data base:\n${s.join('\n')}`);
 }
 
+admin.clusterSet = async function(msg, vargs, gdoc, mdoc)
+{
+    if(!vargs.valid) return;
+}
+
 admin.setPerms = async function(msg, vargs, gdoc, mdoc) {
     if(!vargs.valid) return;
 
