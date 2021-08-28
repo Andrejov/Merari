@@ -1,4 +1,11 @@
-/auth.json
-/db
-/node_modules
+# Node
 /package-lock.json
+/node_modules
+
+# Typescript
+/dist/*
+
+# IDE
+/.vscode/*
+!/.vscode/launch.json
+/config/auth.json
