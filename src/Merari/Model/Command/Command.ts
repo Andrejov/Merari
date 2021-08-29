@@ -1,6 +1,7 @@
-import { Channel, GuildMember, TextChannel, User, VoiceChannel } from "discord.js";
-import { Context } from "vm";
+import { Channel, GuildMember, TextBasedChannels, TextChannel, User, VoiceBasedChannelTypes, VoiceChannel } from "discord.js";
 import Extension from "../Extension/Extension";
+import { ArgumentStructure } from "./Argument";
+import Context from "./Context";
 import { Permission } from "./Permissions";
 import Response from "./Response";
 
@@ -24,31 +25,10 @@ export default class Command
         this.extension = ext;
         this.aliases = Array.isArray(alias) ? alias : [alias];
 
-        if(args.length == 0)
-        {
-            this.args = [[]];
-        } else {
-            if(Array.isArray(args[0]))
-            {
-                this.args = args as ArgumentStructure[];
-            } else {
-                this.args = [args as ArgumentStructure];
-            }
-        }
+        this.args = Array.isArray(args) ? args : [args];
 
         this.execute = execute;
         this.permission = permission;
     }
 
 }
-
-export type ArgumentTypeBase = 'text' | 'number' | 
-                               'user' | 'member' |
-                               'channel' | 'tchannel' | 'vchannel';
-export type ArgumentType = ArgumentTypeBase | `o${ArgumentTypeBase}`;
-export type ArgumentStructure = ArgumentType[];
-
-export type ArgumentValue = string | number |
-                            User | GuildMember |
-                            Channel | TextChannel | VoiceChannel |
-                            undefined;

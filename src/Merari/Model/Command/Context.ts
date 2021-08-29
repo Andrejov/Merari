@@ -1,6 +1,7 @@
 import { Guild, GuildMember, Message, User } from "discord.js";
 import Logger from "../../Util/Logger";
-import Command, { ArgumentStructure, ArgumentValue } from "./Command";
+import { ArgumentValue, ArgumentStructure } from "./Argument";
+import Command from "./Command";
 
 export default class Context
 {
@@ -11,7 +12,7 @@ export default class Context
 
     command: Command;
     args: ArgumentValue[] = [];
-    argStruct: ArgumentStructure = [];
+    argStruct: ArgumentStructure = new ArgumentStructure('', []);
 
     constructor(message: Message, command: Command)
     {

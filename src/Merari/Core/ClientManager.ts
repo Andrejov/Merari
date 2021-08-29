@@ -44,7 +44,11 @@ export default class ClientManager implements IManager
         });
 
         this.client.on('messageCreate', async (msg) => {
-            await this.bot.commandManager.handleMessage(msg);
+            try {
+                await this.bot.commandManager.handleMessage(msg);
+            } catch (error) {
+                this.logger.err("Caught error while handling message. " + error);
+            }
         })
 
         try {

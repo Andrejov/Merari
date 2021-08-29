@@ -6,7 +6,9 @@
             "request": "launch",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["test"],
-            "name": "compile & launch"
+            "name": "compile & launch",
+            "sourceMaps": true,
+            "program": "${workspaceFolder}/src/index.ts"
         },
         {
             "type": "node",

@@ -3,7 +3,7 @@ import { Permission } from "./Permissions";
 export default class Response
 {
     status: ResponseStatus;
-    message?: string;
+    message: string[];
 
     badArg?: number;
     exception?: any;
@@ -17,7 +17,7 @@ export default class Response
         permission?: any
     ) {
         this.status = status;
-        this.message = Array.isArray(message) ? message.join('\r\n') : message ?? undefined;
+        this.message = message ? (Array.isArray(message) ? message : [message]) : [];
         this.badArg = badArg ?? undefined;
         this.exception = exception ?? undefined;
         this.permission = permission ?? undefined;
@@ -35,9 +35,9 @@ export default class Response
     {
         return new Response(ResponseStatus.ERROR, msg);
     }
-    static arg(argIndex: number)
+    static arg(argIndex: number, msg?: string | string[])
     {
-        return new Response(ResponseStatus.BAD_ARG, null, argIndex);
+        return new Response(ResponseStatus.BAD_ARG, msg, argIndex);
     }
     static bad(msg: string | string[])
     {
