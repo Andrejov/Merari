@@ -6,8 +6,9 @@ import Context from "../Model/Command/Context";
 import Response, { ResponseStatus } from "../Model/Command/Response";
 import Config from "../Model/Config/Config";
 import IManager from "../Model/Manager/IManager";
-import Embed from "../Util/Embed";
+import Util from "../Util/Util";
 import Logger from "../Util/Logger";
+import Extension from "../Model/Extension/Extension";
 
 export default class CommandManager implements IManager
 {
@@ -24,58 +25,94 @@ export default class CommandManager implements IManager
         this.config = bot.configManager.commandConfig;
     }
 
+    getPrefix(): string
+    {
+        return this.config.getString('prefix')
+    }
+
     register(cmd: Command)
     {
         this.commands.push(cmd);
+
+        this.sort();
+    }
+
+    unregister(match?: Command | string | Extension)
+    {
+        let filter = (e: Command) => true;
+
+        if(match instanceof Command)
+        {
+            filter = e => e === match;
+        } else if(match instanceof Extension)
+        {
+            filter = e => e.extension === match;
+        } else if(match) {
+            filter = e => e.aliases.indexOf(match) > -1
+        }
+
+        this.commands = this.commands.filter(c => !filter(c));
+
+        this.sort();
+    }
+
+    sort()
+    {
+        this.commands.sort((a,b) => 
+            (a.aliases[0] > b.aliases[0]) ? 1 :
+            (
+                (b.aliases[0] > a.aliases[0] ? -1 : 0)
+            )
+        )
     }
     
     async run() {
         this.logger.msg(this).starting();
 
-        this.register(new Command(null, 'echo', [
-            ArgumentStructure.make('main', "text")
-        ], async (ctx) => {
-            await Embed.send(ctx.message, "Echo", [
-                '```',
-                ...ctx.args.map((a,i) => `${i}: ${a}`),
-                '```'
-            ]);
-            return Response.ok()
-        }));
-        this.register(new Command(null, 'ping', [
-            ArgumentStructure.make('main'),
-            ArgumentStructure.make('mention', 'member')
-        ], async ctx => {
-            if(ctx.argStruct.name == 'mention')
-            {
-                await ctx.message.reply(`${ctx.args[0] as User}`)
-            }else if(ctx.argStruct.name == 'main') {
-                await Embed.send(ctx.message, 'Ping', [
-                    `Latency:`,
-                    `End-to-end: ${Date.now() - ctx.message.createdTimestamp} ms`,
-                    `Websocket: ${ctx.message.client.ws.ping} ms`
-                ])
-            }
+        // this.register(new Command(null, 'echo', [
+        //     ArgumentStructure.make('main', "text")
+        // ], async (ctx) => {
+        //     await Util.embed(ctx.message, "Echo", [
+        //         '```',
+        //         ...ctx.args.map((a,i) => `${i}: ${a}`),
+        //         '```'
+        //     ]);
+        //     return Response.ok()
+        // }));
+        // this.register(new Command(null, 'ping', [
+        //     ArgumentStructure.make('main'),
+        //     ArgumentStructure.make('mention', 'member')
+        // ], async ctx => {
+        //     if(ctx.argStruct.name == 'mention')
+        //     {
+        //         await ctx.message.reply(`${ctx.args[0] as User}`)
+        //     }else if(ctx.argStruct.name == 'main') {
+        //         await Util.embed(ctx.message, 'Ping', [
+        //             `Latency:`,
+        //             `End-to-end: ${Date.now() - ctx.message.createdTimestamp} ms`,
+        //             `Websocket: ${ctx.message.client.ws.ping} ms`
+        //         ])
+        //     }
 
-            return Response.ok(); 
-        }))
-        this.register(new Command(null, 'ci', [
-            ArgumentStructure.make('main', 'vchannel'),
-            ArgumentStructure.make('second', 'vchannel', 'text')
-        ], async ctx => {
-            await Embed.send(ctx.message, 'ci', [
-                (ctx.args[0] as GuildChannel).name,
-                ctx.args[1] + ""
-            ])
+        //     return Response.ok(); 
+        // }))
+        // this.register(new Command(null, 'ci', [
+        //     ArgumentStructure.make('main', 'vchannel'),
+        //     ArgumentStructure.make('second', 'vchannel', 'text')
+        // ], async ctx => {
+        //     await Util.embed(ctx.message, 'ci', [
+        //         (ctx.args[0] as GuildChannel).name,
+        //         ctx.args[1] + ""
+        //     ])
 
-            return Response.ok();
-        }))
+        //     return Response.ok();
+        // }))
     }
 
     async handleMessage(msg: Message)
     {
         const clean = msg.content.trim();
-        const prefix = this.config.getString('prefix');
+        const prefix = this.getPrefix();
 
         if(clean.startsWith(prefix))
         {
@@ -100,7 +137,7 @@ export default class CommandManager implements IManager
             {
                 this.logger.trace(`Command ${cmd} received with ${args.length} args`);
 
-                const context = new Context(msg, command);
+                const context = new Context(msg, command, cmd);
 
                 let argStruct = command.args.find(a => a.maxLength() == args.length);
                
@@ -128,27 +165,36 @@ export default class CommandManager implements IManager
 
                     for(let i = 0; i < argStruct.maxLength(); i++)
                     {
-                        const parsed = await Argument.parse(
-                            msg.guild as Guild,
-                            args[i],
-                            argStruct.structure[i]
-                        )
-
-                        if(parsed.valid)
-                        {
-                            context.args.push(parsed.value);
-                        } else {
-                            response = Response.arg(i, [
-                                Argument.usageMessage(prefix, cmd, argStruct, i),
-                                `Additional info: ${parsed.msg}`
-                            ])
+                        try {
+                            const parsed = await Argument.parse(
+                                msg.guild as Guild,
+                                args[i],
+                                argStruct.structure[i]
+                            )
+    
+                            if(parsed.valid)
+                            {
+                                context.args.push(parsed.value);
+                            } else {
+                                response = Response.arg(i, [
+                                    Argument.usageMessage(prefix, cmd, argStruct, i),
+                                    `Additional info: ${parsed.msg}`
+                                ])
+                                break;
+                            }
+                        } catch (error) {
+                            response = Response.except(error, `Could not parse argument #${i}`);
                             break;
                         }
                     }
 
                     if(!response)
                     {
-                        response = await command.execute(context);
+                        try {
+                            response = await command.execute(context);
+                        } catch (error) {
+                            response = Response.except(error);
+                        }
                     }
                 } else {
                     response = Response.bad([
@@ -170,27 +216,27 @@ export default class CommandManager implements IManager
                     break;
                 case ResponseStatus.ERROR:
                     await msg.react('❌');
-                    await Embed.send(msg, 'Error', [
+                    await Util.embed(msg, 'Error', [
                         'Merari has encountered an error while executing your command',
                         ...response.message
                     ]);
                     break;
                 case ResponseStatus.BAD_ARG:
                     await msg.react('⚠️');
-                    await Embed.send(msg, 'Bad request', [
+                    await Util.embed(msg, 'Bad request', [
                         'Command syntax was incorrect',
                         ...response.message
                     ])
                     break;
                 case ResponseStatus.BAD_REQUEST:
                     await msg.react('⚠️');
-                    await Embed.send(msg, 'Bad request', [
+                    await Util.embed(msg, 'Bad request', [
                         ...response.message
                     ])
                     break;
                 case ResponseStatus.FORBIDDEN:
                     await msg.react('⛔');
-                    await Embed.send(msg, 'Insufficient permissions', [
+                    await Util.embed(msg, 'Insufficient permissions', [
                         'You are missing permission',
                         `**${response.permission}**`,
                         ...response.message
@@ -198,8 +244,9 @@ export default class CommandManager implements IManager
                     break;
                 case ResponseStatus.EXCEPTION:
                     await msg.react('❌');
-                    await Embed.send(msg, 'Error', [
+                    await Util.embed(msg, 'Error', [
                         'Merari has encountered an (yet) unexpected error',
+                        ...response.message,
                         'Verbose data:',
                         '```',
                         response.exception + "",
@@ -210,6 +257,8 @@ export default class CommandManager implements IManager
                     await msg.delete();
                     break;
             }
+
+            this.logger.debug(`${msg.author.tag} has successfully executed command ${cmd} with status ${response.status}`);
         }
     }
 }

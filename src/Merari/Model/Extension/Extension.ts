@@ -20,7 +20,7 @@ export default abstract class Extension
 
         this.config = new Config(
             logger.child("Config"),
-            Directory.getConfig(`extension_${this.getName()}.json`)
+            Directory.getConfig(`extension_${this.getName().toLowerCase()}.json`)
         );
 
         this.create();
@@ -37,11 +37,26 @@ export default abstract class Extension
     }
 
     getName(): string {
-        return this.constructor.name
+        return this.constructor.name.endsWith("Extension") ? 
+               this.constructor.name.substr(0,this.constructor.name.length - 'Extension'.length) :
+               this.constructor.name;
     }
 
     getNameShort(): string {
-        return this.constructor.name.split('').filter(c => c.toUpperCase() == c).join('')
+        let ui = 0;
+
+        return this.constructor.name
+            .split('')
+            .filter((c,i) => {
+                if(c.toUpperCase() == c)
+                {
+                    ui = i;
+                    return true;
+                } else {
+                    return i < ui + 3;
+                }
+            })
+            .join('')
     }
 
     create(): void 

@@ -19,7 +19,10 @@ export default class Command
         ext: Extension | null | undefined, 
         alias: string | string[], 
         args: ArgumentStructure | ArgumentStructure[], 
-        execute: (context: Context) => Promise<Response>,
+        execute: 
+            ((context: Context) => Promise<Response>) | 
+            ((context: Context) => Promise<Response>)[] |
+            { [key: string]:  (context: Context) => Promise<Response>},
         permission?: Permission)
     {
         this.extension = ext;
@@ -27,7 +30,28 @@ export default class Command
 
         this.args = Array.isArray(args) ? args : [args];
 
-        this.execute = execute;
+        if(this.args.length == 0)
+        {
+            this.args.push(
+                ArgumentStructure.make('empty')
+            )
+        }
+
+        if(Array.isArray(execute))
+        {
+            this.execute = async ctx => {
+                return await execute[
+                    this.args.indexOf(ctx.argStruct)
+                ](ctx);
+            }
+        } else if(typeof execute === 'object') {
+            this.execute = async ctx => {
+                return await execute[ctx.argStruct.name](ctx)
+            }
+        } else {
+            this.execute = ext ? execute.bind(ext) : execute;
+        }
+
         this.permission = permission;
     }
 

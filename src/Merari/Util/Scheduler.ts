@@ -15,16 +15,22 @@ export default class Scheduler
 
     scheduleRepeatingTask(extension: Extension, callback: () => void | Promise<void>, time: number)
     {
+        const task = new ScheduledEvent(extension, callback, time, false);
         this.events.push(
-            new ScheduledEvent(extension, callback, time, false)
+            task
         )
+
+        return task;
     }
 
     scheduleDelayedTask(extension: Extension, callback: () => void | Promise<void>, time: number)
     {
+        const task = new ScheduledEvent(extension, callback, time, true);
         this.events.push(
-            new ScheduledEvent(extension, callback, time, true)
+            task
         )
+
+        return task;
     }
 
     clearOne(e: ScheduledEvent)
@@ -74,7 +80,7 @@ export class ScheduledEvent
     {
         this.extension = extension;
         this.isTimeout = fireOnlyOnce;
-        this.callback = callback;
+        this.callback = callback.bind(extension);
         this.time = time;
     }
 

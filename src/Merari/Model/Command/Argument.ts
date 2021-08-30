@@ -90,6 +90,9 @@ export default class Argument
                 if(mention.startsWith("!")) mention = mention.substr(1);
 
                 user = user ?? guild.client.users.cache.find(m => !!(m.id == mention));
+                try {
+                    user = user ?? await guild.client.users.fetch(mention);
+                } catch (error) {}
             }
 
             // Fetch members when in doubt
@@ -108,6 +111,11 @@ export default class Argument
 
             // Search by id
             user = user ?? guild.client.users.cache.find(m => !!(m.id.trim().toLowerCase() == find));
+
+            // Final touch
+            try {
+                user = user ?? await guild.client.users.fetch(find);
+            } catch (error) {}
 
             if(user)
             {
