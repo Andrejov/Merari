@@ -47,7 +47,7 @@ export default class Response
     {
         return new Response(ResponseStatus.FORBIDDEN, msg, null, null, perm);
     }
-    static except(err: Object, msg?: string | string[])
+    static except(err: any, msg?: string | string[])
     {
         return new Response(ResponseStatus.EXCEPTION, msg, null, err);
     }
