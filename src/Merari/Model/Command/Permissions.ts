@@ -1,3 +1,5 @@
 import { PermissionString } from "discord.js";
 
-export type Permission = 'MERARI_ADMIN' | PermissionString;
+export type Permission = MerariPermission | PermissionString;
+
+export type MerariPermission = 'MERARI_OWNER' | 'MERARI_ADMIN' | 'ANY';

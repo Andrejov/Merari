@@ -192,7 +192,8 @@ export default class Argument
         return [
             '```',
             `Possible syntax for command ${cmd.aliases[0]}`,
-            `Aliases: ${cmd.aliases.join(' | ')}`,
+            `Aliases: ${cmd.aliases.map(a => a.length ? a : `''`).join(' | ')}`,
+            `Required permission: ${cmd.permission ?? 'ANY'}`,
             ...cmd.args.map(s => 
                 `${prefix}${cmd.aliases[0]} ` +
                 s.structure.map(a => a.optional ? `[${a.type}]` : `<${a.type}>`).join(' ')

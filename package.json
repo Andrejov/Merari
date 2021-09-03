@@ -1,12 +1,12 @@
 {
   "name": "merari",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
     "postinstall": "npx tsc",
-    "test": "npx tsc && npm start"
+    "test": "npx tsc && cross-env CFG_MAIN_DEVELOPMENT='development' CFG_MAIN_OWNERS=\"['358231353898172417']\" npm start"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Andrejov/Merari#readme",
   "devDependencies": {
     "@types/node": "^16.7.1",
+    "cross-env": "^7.0.3",
     "typescript": "^4.3.5"
   },
   "dependencies": {
@@ -28,6 +29,8 @@
     "discord.js": "^13.1.0",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.2",
+    "moment": "^2.29.1",
+    "tsee": "^1.3.2",
     "ytdl-core": "^4.9.1"
   }
 }

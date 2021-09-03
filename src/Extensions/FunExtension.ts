@@ -31,19 +31,21 @@ export default class FunExtension extends Extension
                 });
 
                 return Response.delete();
-            }
+            },
+            'MERARI_ADMIN'
         )
 
         this.shell.register(
             ['pop', 'foil'],
             [],
             async ctx => {
-                Util.embed(ctx.message, 'Pop me :3', [
+                await Util.embed(ctx.message, 'Pop me :3', [
                     ...new Array(8).fill(`|| O ||`.repeat(15)) as string[]
                 ])
 
                 return Response.ok();
-            }
+            },
+            'ANY'
         )
     }
 }

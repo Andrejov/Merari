@@ -75,7 +75,8 @@ export default class UtilityExtension extends Extension
                 ])
 
                 return Response.ok();
-            }
+            },
+            'MERARI_ADMIN'
         )
     }
 }

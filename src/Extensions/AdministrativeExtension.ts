@@ -7,27 +7,37 @@ export default class AdministrativeExtension extends Extension
 {
     async enable()
     {
-        this.shell.register(['ping', 'pong', 'hello'], [
-            ArgumentStructure.make('main')
-        ], async ctx => {
-            let title = 'Ping';
+        this.shell.register(
+            ['ping', 'pong', 'hello', 'merari', ''], 
+            [
+                ArgumentStructure.make('main')
+            ], async ctx => {
+                let title = 'Ping';
 
-            if(ctx.alias == 'pong')
-            {
-                title = 'Pong'
-            } else if(ctx.alias == 'help' || ctx.alias == 'hello')
-            {
-                title = 'Hello'
-            }
+                if(ctx.alias == 'pong')
+                {
+                    title = 'Pong'
+                } else if(ctx.alias == 'hello') {
+                    title = 'Hello :3'
+                } else if(ctx.alias == 'merari' || ctx.alias == 'hello' || ctx.alias == '')
+                {
+                    title = 'Status'
+                }
 
-            await Util.embed(ctx.message, title, [
-                `Latency:`,
-                `End-to-end: ${Date.now() - ctx.message.createdTimestamp} ms`,
-                `Websocket: ${ctx.message.client.ws.ping} ms`
-            ])
+                await Util.embed(ctx.message, title, [
+                    `Mode: **${this.bot.configManager.mainConfig.getBool('development') ? 'development' : 'production'}**`,
+                    `Uptime: ${this.bot.clientManager.getUptime()}`,
+                    `Latency:`,
+                    '```',
+                    `End-to-end: ${Date.now() - ctx.message.createdTimestamp} ms`,
+                    `Websocket: ${ctx.message.client.ws.ping} ms`,
+                    '```'
+                ])
 
-            return Response.ok();
-        })
+                return Response.ok();
+            }, 
+            'ANY'
+        )
 
         this.shell.register(
             ['help', 'command', 'commands', 'cmd', 'cmds', 'list'],
@@ -70,7 +80,8 @@ export default class AdministrativeExtension extends Extension
                 }
 
                 return Response.ok();
-            }
+            },
+            'ANY'
         ) 
 
         this.shell.register(['extlist'], [],
@@ -91,34 +102,39 @@ export default class AdministrativeExtension extends Extension
                 ])
 
                 return Response.ok();
-            }
+            },
+            'MERARI_OWNER'
         );
 
-        this.shell.register(['extdo'], [
-            ArgumentStructure.make('do', 'text')
-        ], async ctx => {
-            const find = (ctx.args[0] as string).toLowerCase();
-            const ext = this.bot.extensionManager.extensions.find(e => e.getName().toLowerCase().indexOf(find) > -1)
+        this.shell.register(
+            ['extdo'], 
+                [
+                ArgumentStructure.make('do', 'text')
+            ], async ctx => {
+                const find = (ctx.args[0] as string).toLowerCase();
+                const ext = this.bot.extensionManager.extensions.find(e => e.getName().toLowerCase().indexOf(find) > -1)
 
-            if(ext)
-            {
-                const enabled = this.bot.extensionManager.enabled.indexOf(ext) > -1;
-
-                if(enabled)
+                if(ext)
                 {
-                    await this.bot.extensionManager.disable(ext);
+                    const enabled = this.bot.extensionManager.enabled.indexOf(ext) > -1;
+
+                    if(enabled)
+                    {
+                        await this.bot.extensionManager.disable(ext);
+                    } else {
+                        await this.bot.extensionManager.enable(ext);
+                    }
+
+                    Util.embed(ctx.message, 'Extension switch', [
+                        `Successfully ${enabled ? 'disabled' : 'enabled'} extension \`${ext.getName()}\``
+                    ])
+
+                    return Response.ok();
                 } else {
-                    await this.bot.extensionManager.enable(ext);
+                    return Response.arg(0, 'Could not find that extension')
                 }
-
-                Util.embed(ctx.message, 'Extension switch', [
-                    `Successfully ${enabled ? 'disabled' : 'enabled'} extension \`${ext.getName()}\``
-                ])
-
-                return Response.ok();
-            } else {
-                return Response.arg(0, 'Could not find that extension')
-            }
-        })
+            },
+            'MERARI_OWNER'
+        )
     }
 }

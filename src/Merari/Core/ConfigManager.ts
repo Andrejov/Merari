@@ -20,15 +20,18 @@ export default class ConfigManager implements IManager
 
         this.mainConfig = new Config(
             this.logger.child("Main"),
-            Directory.getConfig("config.json")
+            Directory.getConfig("config.json"),
+            'main'
         )
         this.authConfig = new Config(
             this.logger.child("Auth"),
-            Directory.getConfig("auth.json")
+            Directory.getConfig("auth.json"),
+            'auth'
         )
         this.commandConfig = new Config(
             this.logger.child("Cmd"),
-            Directory.getConfig("command.json")
+            Directory.getConfig("command.json"),
+            'auth'
         )
     }
 
@@ -37,7 +40,10 @@ export default class ConfigManager implements IManager
         this.logger.msg(this).starting();
 
         this.logger.trace(`Loading configs at ${Directory.getConfig()}`);
-        this.mainConfig.init({})
+        this.mainConfig.init({
+            development: false,
+            owners: []
+        })
         this.authConfig.init({
             token: ""
         })

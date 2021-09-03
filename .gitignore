@@ -8,4 +8,9 @@
 # IDE
 /.vscode/*
 !/.vscode/launch.json
+
+# Images
+res/*
+
+# Confidential
 /config/auth.json

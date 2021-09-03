@@ -20,7 +20,8 @@ export default abstract class Extension
 
         this.config = new Config(
             logger.child("Config"),
-            Directory.getConfig(`extension_${this.getName().toLowerCase()}.json`)
+            Directory.getConfig(`extension_${this.getName().toLowerCase()}.json`),
+            `ext_${this.getName().toLowerCase()}`
         );
 
         this.create();

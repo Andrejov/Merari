@@ -1,4 +1,4 @@
-import { Guild, GuildChannel, Message, User } from "discord.js";
+import { Guild, GuildChannel, GuildMember, Message, User } from "discord.js";
 import Merari from "../Merari";
 import Argument, { ArgumentStructure, ArgumentType, ArgumentValue } from "../Model/Command/Argument";
 import Command from "../Model/Command/Command";
@@ -129,85 +129,95 @@ export default class CommandManager implements IManager
             }
 
             const command = this.commands.find(c => c.aliases.indexOf(cmd) > -1);
-            let response: Response | undefined;
-
-            // TODO: Permission check
-
-            if(command)
-            {
-                this.logger.trace(`Command ${cmd} received with ${args.length} args`);
-
-                const context = new Context(msg, command, cmd);
-
-                let argStruct = command.args.find(a => a.maxLength() == args.length);
-               
-                if(!argStruct)
+            let response: Response | undefined = await (async () => {
+                if(command)
                 {
-                    argStruct = [...command.args].sort((a,b) => {
-                        return b.maxLength() - a.maxLength()
-                    }).find(a => {
-                        return a.minLength() <= args.length;
-                    });
-                }
+                    this.logger.trace(`Command ${cmd} received with ${args.length} args`);
 
-                if(argStruct)
-                {
-                    context.argStruct = argStruct;
+                    // TODO: Permission check
+                    const permission = command.permission;
 
-                    this.logger.trace(`Found arg struct with ${argStruct.minLength()}/${argStruct.maxLength()} args`)
-
-                    while(argStruct.maxLength() < args.length)
-                    {
-                        args.push(
-                            [args.pop(), args.pop()].reverse().join(' ')
-                        )
+                    if(!await this.bot.permissionsManager.hasPermission(
+                        msg.member as GuildMember,
+                        permission
+                    )) {
+                        return Response.perm(permission ?? 'ANY');
                     }
 
-                    for(let i = 0; i < argStruct.maxLength(); i++)
+                    const context = new Context(msg, command, cmd);
+
+                    let argStruct = command.args.find(a => a.maxLength() == args.length);
+                
+                    if(!argStruct)
                     {
-                        try {
-                            const parsed = await Argument.parse(
-                                msg.guild as Guild,
-                                args[i],
-                                argStruct.structure[i]
-                            )
-    
-                            if(parsed.valid)
+                        argStruct = [...command.args].sort((a,b) => {
+                            return b.maxLength() - a.maxLength()
+                        }).find(a => {
+                            return a.minLength() <= args.length;
+                        });
+                    }
+
+                    if(argStruct)
+                    {
+                        context.argStruct = argStruct;
+
+                        this.logger.trace(`Found arg struct with ${argStruct.minLength()}/${argStruct.maxLength()} args`)
+
+                        while(argStruct.maxLength() < args.length)
+                        {
+                            if(args.length == 1)
                             {
-                                context.args.push(parsed.value);
-                            } else {
-                                response = Response.arg(i, [
-                                    Argument.usageMessage(prefix, cmd, argStruct, i),
-                                    `Additional info: ${parsed.msg}`
-                                ])
                                 break;
                             }
-                        } catch (error) {
-                            response = Response.except(error, `Could not parse argument #${i}`);
-                            break;
-                        }
-                    }
 
-                    if(!response)
-                    {
-                        try {
-                            response = await command.execute(context);
-                        } catch (error) {
-                            response = Response.except(error);
+                            args.push(
+                                [args.pop(), args.pop()].reverse().join(' ')
+                            )
                         }
+
+                        for(let i = 0; i < argStruct.maxLength(); i++)
+                        {
+                            try {
+                                const parsed = await Argument.parse(
+                                    msg.guild as Guild,
+                                    args[i],
+                                    argStruct.structure[i]
+                                )
+        
+                                if(parsed.valid)
+                                {
+                                    context.args.push(parsed.value);
+                                } else {
+                                    return Response.arg(i, [
+                                        Argument.usageMessage(prefix, cmd, argStruct, i),
+                                        `Additional info: ${parsed.msg}`
+                                    ])
+                                    break;
+                                }
+                            } catch (error) {
+                                return Response.except(error, `Could not parse argument #${i}`);
+                                break;
+                            }
+                        }
+
+                        try {
+                            return await command.execute(context);
+                        } catch (error) {
+                            return Response.except(error);
+                        }
+                    } else {
+                        return Response.bad([
+                            `Your command did not match any argument syntax for ${cmd}`,
+                            ...Argument.usagesMessage(prefix, command)
+                        ]);
                     }
                 } else {
-                    response = Response.bad([
-                        `Your command did not match any argument syntax for ${cmd}`,
-                        ...Argument.usagesMessage(prefix, command)
+                    return Response.bad([
+                        `Unknown command alias.`,
+                        `*Merari has responded, because you have used prefix.*`
                     ]);
                 }
-            } else {
-                response = Response.bad([
-                    `Unknown command alias.`,
-                    `*Merari has responded, because you have used prefix.*`
-                ]);
-            }
+            })();
 
             switch(response.status)
             {

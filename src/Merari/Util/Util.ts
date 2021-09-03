@@ -12,7 +12,7 @@ export default class Util
             channel = channel.channel;
         }
 
-        await channel.send({
+        return await channel.send({
             embeds: [
                 {
                     color: 0xaa00aa,

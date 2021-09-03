@@ -1,11 +1,15 @@
 import { Client, Intents, Message } from "discord.js";
+import moment from "moment";
+import { EventEmitter } from "tsee";
 import Merari from "../Merari";
 import Command from "../Model/Command/Command";
 import Config from "../Model/Config/Config";
 import IManager from "../Model/Manager/IManager";
 import Logger from "../Util/Logger";
 
-export default class ClientManager implements IManager
+export default class ClientManager extends EventEmitter<{
+    login: () => void
+}> implements IManager
 {
     bot: Merari;
     logger: Logger;
@@ -14,8 +18,12 @@ export default class ClientManager implements IManager
 
     commands: Command[] = [];
 
+    private startTime: number;
+
     constructor(bot: Merari, logger: Logger)
     {
+        super();
+
         this.bot = bot;
         this.logger = logger;
         this.auth = bot.configManager.authConfig;
@@ -29,11 +37,18 @@ export default class ClientManager implements IManager
                 "GUILD_INVITES"
             ]
         })
+
+        this.startTime = new Date().getTime();
     }
 
     getClient()
     {
         return this.client;
+    }
+
+    getUptime(): string
+    {
+        return moment(this.startTime).fromNow(true);
     }
     
     async run() {
@@ -41,6 +56,13 @@ export default class ClientManager implements IManager
 
         this.client.on('ready', () => {
             this.logger.greet("Bot logged in successfully");
+            this.client.user?.setActivity({
+                type: 'STREAMING',
+                name: 'booting...',
+                url: 'https://youtube.com/'
+            })
+
+            this.emit('login');
         });
 
         this.client.on('messageCreate', async (msg) => {

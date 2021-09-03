@@ -1,5 +1,7 @@
 import CommandManager from "../../Core/CommandManager";
 import ExtensionManager from "../../Core/ExtensionManager";
+import Merari from "../../Merari";
+import Logger from "../../Util/Logger";
 import Scheduler from "../../Util/Scheduler";
 import { ArgumentStructure } from "../Command/Argument";
 import Command from "../Command/Command";
@@ -27,7 +29,7 @@ export default class ExtensionShell
         return this.manager.scheduler;
     }
 
-    get<T extends Extension>(ext: new () => T): T
+    get<T extends Extension>(ext: new (bot: Merari, logger: Logger, shell: ExtensionShell) => T): T
     {
         return this.manager.get<T>(ext);
     }

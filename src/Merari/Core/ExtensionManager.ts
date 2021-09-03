@@ -90,7 +90,7 @@ export default class ExtensionManager implements IManager
         }
     }
 
-    get<T extends Extension>(ext: new () => T): T
+    get<T extends Extension>(ext: new (bot: Merari, logger: Logger, shell: ExtensionShell) => T): T
     {
         return this.extensions.find(e => e.constructor.name == ext.name) as T;
     }

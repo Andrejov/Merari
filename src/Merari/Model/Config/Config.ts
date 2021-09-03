@@ -6,9 +6,9 @@ export default class Config extends ConfigSection
 {
     path: string;
 
-    constructor(logger: Logger | undefined, path: string)
+    constructor(logger: Logger | undefined, path: string, env?: string)
     {
-        super(logger);
+        super(logger, env);
 
         this.logger = logger;
         this.path = path;
