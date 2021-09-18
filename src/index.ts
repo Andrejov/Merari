@@ -2,6 +2,7 @@ import ActivityExtension from "./Extensions/ActivityExtension";
 import AdministrativeExtension from "./Extensions/AdministrativeExtension";
 import FunExtension from "./Extensions/FunExtension";
 import MinesweeperExtension from "./Extensions/Minesweeper";
+import PlayerExtension from "./Extensions/PlayerExtension";
 import UtilityExtension from "./Extensions/UtilityExtension";
 import Merari from "./Merari/Merari";
 import Version from "./Merari/Util/Version";
@@ -12,7 +13,8 @@ bot.extensionManager.add(ActivityExtension)
 bot.extensionManager.add(FunExtension);
 bot.extensionManager.add(AdministrativeExtension)
 bot.extensionManager.add(UtilityExtension)
-bot.extensionManager.add(MinesweeperExtension)
+// bot.extensionManager.add(MinesweeperExtension)
+bot.extensionManager.add(PlayerExtension)
 
 bot.on('login', () => {
     bot.extensionManager.get(ActivityExtension).name = `Running v.${Version.get()}`;

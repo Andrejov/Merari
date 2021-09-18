@@ -34,7 +34,8 @@ export default class ClientManager extends EventEmitter<{
                 "GUILD_MESSAGES",
                 "GUILD_WEBHOOKS",
                 "GUILD_MESSAGE_REACTIONS",
-                "GUILD_INVITES"
+                "GUILD_INVITES",
+                "GUILD_VOICE_STATES"
             ]
         })
 
