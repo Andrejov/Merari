@@ -1,5 +1,6 @@
 import CommandManager from "../../Core/CommandManager";
 import ExtensionManager from "../../Core/ExtensionManager";
+import PermissionsManager from "../../Core/PermissionsManager";
 import Merari from "../../Merari";
 import Logger from "../../Util/Logger";
 import Scheduler from "../../Util/Scheduler";
@@ -69,6 +70,11 @@ export default class ExtensionShell
     extensions(): ExtensionManager
     {
         return this.manager.bot.extensionManager;
+    }
+
+    permissions(): PermissionsManager
+    {
+        return this.manager.bot.permissionsManager;
     }
 }
 

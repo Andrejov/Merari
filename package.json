@@ -1,12 +1,12 @@
 {
   "name": "merari",
-  "version": "0.2.2",
+  "version": "0.2.2a",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
     "postinstall": "npx tsc",
-    "test": "npx tsc && cross-env CFG_MAIN_DEVELOPMENT='development' CFG_MAIN_OWNERS=\"['358231353898172417']\" npm start"
+    "test": "npx tsc && cross-env CFG_MAIN_DEVELOPMENT='development' npm start"
   },
   "repository": {
     "type": "git",

@@ -1,3 +1,4 @@
+import { GuildMember } from "discord.js";
 import Argument, { ArgumentStructure } from "../Merari/Model/Command/Argument";
 import Response from "../Merari/Model/Command/Response";
 import Extension from "../Merari/Model/Extension/Extension";
@@ -24,12 +25,14 @@ export default class AdministrativeExtension extends Extension
                     title = 'Status'
                 }
 
+                const ete = Date.now() - ctx.message.createdTimestamp;
+
                 await Util.embed(ctx.message, title, [
                     `Mode: **${this.bot.configManager.mainConfig.getBool('development') ? 'development' : 'production'}**`,
                     `Uptime: ${this.bot.clientManager.getUptime()}`,
                     `Latency:`,
                     '```',
-                    `End-to-end: ${Date.now() - ctx.message.createdTimestamp} ms`,
+                    `End-to-end: ${ete > 0 ? ete : '?'} ms`,
                     `Websocket: ${ctx.message.client.ws.ping} ms`,
                     '```'
                 ])
@@ -40,7 +43,7 @@ export default class AdministrativeExtension extends Extension
         )
 
         this.shell.register(
-            ['help', 'command', 'commands', 'cmd', 'cmds', 'list'],
+            ['help', 'command', 'commands', 'cmd', 'cmds'],
             [
                 ArgumentStructure.make('main'),
                 ArgumentStructure.make('detail', 'text')
@@ -135,6 +138,38 @@ export default class AdministrativeExtension extends Extension
                 }
             },
             'MERARI_OWNER'
+        )
+
+        this.shell.register(
+            ['permcheck', 'pc'],
+            [
+                ArgumentStructure.make('main', 'text')
+            ],
+            async ctx => {
+                const raw = ctx.args[0] as string;
+
+                const perm = this.shell.permissions().tryParse(raw)
+
+                const status = perm ? 
+                    await this.shell.permissions()
+                        .hasPermission(
+                        ctx.member as GuildMember, 
+                        perm
+                    ) : undefined
+
+                if(!perm)
+                {
+                    return Response.arg(0, 'This permission does not exist')
+                }
+
+                if(!status)
+                {
+                    return Response.perm(perm);
+                }
+
+                return Response.ok();
+            },
+            'ANY'
         )
     }
 }

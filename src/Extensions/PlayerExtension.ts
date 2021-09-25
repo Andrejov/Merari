@@ -141,6 +141,47 @@ export default class PlayerExtension extends Extension
             },
             "ANY"
         );
+        this.shell.register(
+            ['queue', 'q', 'l', 'list'],
+            [],
+            async (ctx) => {
+                const verify = await this.verifyRequest(ctx);
+
+                if(verify)
+                {
+                    return verify;
+                } else {
+                    const q = this.getQueue(ctx.guild);
+
+                    const songs = q.songs.map((s,i) => 
+                        `${
+                            i.toString().padStart(3,' ')
+                        }: ${
+                            s.title.substr(0,40)
+                        }${
+                            q.position == i ? ' <==' : ''
+                        }`
+                    )
+                    
+                    const rpt = songs.reduce((p, c) => Math.max(p,c.length), 0);
+
+                    await Util.embed(
+                        ctx.channel as TextBasedChannels,
+                        'Player',
+                        [
+                            '**Queue:**',
+                            '```',
+                            '='.repeat(rpt),
+                            ...songs,
+                            '='.repeat(rpt),
+                            '```'
+                        ]
+                    )
+
+                    return Response.ok();
+                }
+            }
+        )
     }
 
     async verifyRequest(ctx: Context): Promise<Response | null>
@@ -171,7 +212,17 @@ export default class PlayerExtension extends Extension
     }
 
     async fetchUrl(str: string): Promise<Song | null>
-    {
+    {   
+        // Try to fetch direct info
+        try {
+            const song = await ytdl.getInfo(str);
+            return {
+                title: song.videoDetails.title,
+                url: song.videoDetails.video_url
+            }
+        } catch (error) {}
+
+        // Try to find video by string query
         try {
             const search = await ytsr(
                 str,
@@ -198,6 +249,8 @@ export default class PlayerExtension extends Extension
             return null;
         }
     }
+
+    // TODO: Cleanup
 
     // async play(guild: Guild, channel: VoiceChannel, str: string | undefined, text: TextBasedChannels): Promise<Response>
     // {

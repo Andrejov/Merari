@@ -32,6 +32,13 @@ export default class CommandManager implements IManager
 
     register(cmd: Command)
     {
+        const colliding = cmd.aliases.reduce((p, c) => p + +!!(this.commands.find(f => f.aliases.includes(c))), 0)
+
+        if(colliding > 0)
+        {
+            this.logger.warn(`Command ${cmd.aliases[0]} has ${colliding} colliding alias(es)!`)
+        }
+
         this.commands.push(cmd);
 
         this.sort();

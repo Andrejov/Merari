@@ -1,7 +1,7 @@
 import { GuildMember, PermissionString } from "discord.js";
 import Merari from "../Merari";
 import Command from "../Model/Command/Command";
-import { MerariPermission, Permission } from "../Model/Command/Permissions";
+import { DiscordPermissionList, MerariPermission, MerariPermissionList, Permission } from "../Model/Command/Permissions";
 import IManager from "../Model/Manager/IManager";
 import Logger from "../Util/Logger";
 
@@ -45,7 +45,7 @@ export default class PermissionsManager implements IManager
             if(permission == 'MERARI_ADMIN')
             {
                 return member.permissions.has('ADMINISTRATOR') ||
-                    this.hasPermission(member, 'MERARI_OWNER');
+                    await this.hasPermission(member, 'MERARI_OWNER');
             } else if(permission == 'MERARI_OWNER')
             {
                 const owners = this.owners();
@@ -58,5 +58,25 @@ export default class PermissionsManager implements IManager
 
             return member.permissions.has(permission as PermissionString, true);
         }
+    }
+
+    tryParse(perm?: string): Permission | undefined
+    {
+        if(!perm) return undefined;
+
+        let clean = perm.trim().toUpperCase();
+
+        if(clean.startsWith('"') && clean.endsWith('"'))
+        {
+            clean = clean.substr(1, clean.length - 2)
+        }
+
+        if(MerariPermissionList.indexOf(clean) > -1 ||
+            DiscordPermissionList.indexOf(clean) > -1)
+        {
+            return clean as Permission;
+        }
+
+        return undefined;
     }
 } 

@@ -79,7 +79,11 @@ export default class ClientManager extends EventEmitter<{
                 this.auth.getString("token")
             )
         } catch (error) {
+            this.logger.err(`Login error: ${error}`)
             this.logger.err("Could not log in with specified token: Verify token key in ./config/auth.json");
+            this.logger.err('Make sure you are using Node.js v.16.x.x or higher!')
+
+            throw 'Cannot log in: bot halted';
         }
     }
 }
